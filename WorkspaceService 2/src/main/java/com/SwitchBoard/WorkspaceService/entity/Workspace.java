@@ -22,7 +22,7 @@ public class Workspace extends BaseEntity {
     private String description;
     
     @Enumerated(EnumType.STRING)
-    private WorkspaceVisibility visibility;
+    private WorkspaceType workspaceType;
 
     // Note: This references a user in another microservice
     // No foreign key constraint should exist on this field
@@ -49,8 +49,10 @@ public class Workspace extends BaseEntity {
     @Builder.Default
     private Set<ActivityLog> activityLogs = new HashSet<>();
 
-    public enum WorkspaceVisibility {
-        PUBLIC, PRIVATE, ORGANIZATION_ONLY
+    public enum WorkspaceType {
+        DEFAULT,
+        ROADMAP,
+        GROUP_PROJECT
     }
 }
 

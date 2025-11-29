@@ -13,8 +13,6 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
 
     List<Workspace> findByOwnerUserId(UUID ownerUserId);
     
-    List<Workspace> findByVisibility(Workspace.WorkspaceVisibility visibility);
-    
     @Query("SELECT w FROM Workspace w WHERE w.name LIKE %:name%")
     List<Workspace> findByNameContainingIgnoreCase(@Param("name") String name);
     

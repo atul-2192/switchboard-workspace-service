@@ -47,14 +47,17 @@ public class WorkspaceController {
             @Parameter(description = "Workspace creation request with workspace details", required = true)
             @Valid @RequestBody WorkspaceCreateRequest request,
             @RequestHeader("X-User-Id") String userIdHeader) {
-        log.info("WorkspaceController :: createWorkspace :: Creating workspace :: {}", request.getName());
+        log.info("WorkspaceController :: createWorkspace :: Received request to create workspace :: {} :: User: {}", 
+                request.getName(), userIdHeader);
+        
         UUID userId = UUID.fromString(userIdHeader);
         request.setOwnerUserId(userId);
 
         WorkspaceResponse workspaceResponse = workspaceService.createWorkspace(request);
         ApiResponse response = ApiResponse.success("Workspace created successfully ", workspaceResponse, "/api/v1/workspaces/" + workspaceResponse.getId());
 
-        log.info("WorkspaceController :: createWorkspace :: Workspace created :: {}", workspaceResponse.getId());
+        log.info("WorkspaceController :: createWorkspace :: Workspace created successfully :: ID: {} :: Name: {}", 
+                workspaceResponse.getId(), workspaceResponse.getName());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -72,10 +75,11 @@ public class WorkspaceController {
     public ResponseEntity<WorkspaceResponse> getWorkspaceById(
             @Parameter(description = "UUID of the workspace", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
             @PathVariable UUID id) {
-        log.info("WorkspaceController :: getWorkspaceById :: Fetching workspace :: {}", id);
+        log.info("WorkspaceController :: getWorkspaceById :: Received request to fetch workspace :: {}", id);
 
         WorkspaceResponse workspaceResponse = workspaceService.getWorkspaceById(id);
 
+        log.info("WorkspaceController :: getWorkspaceById :: Successfully retrieved workspace :: {}", id);
         return ResponseEntity.ok(workspaceResponse);
     }
 
@@ -86,13 +90,14 @@ public class WorkspaceController {
     )
     public ResponseEntity<List<WorkspaceResponse>> getWorkspacesByOwnerUserId(
             @RequestHeader("X-User-Id") String userIdHeader){
-        // Get the logged-in user ID from the header set by API Gateway
         UUID userId = UUID.fromString(userIdHeader);
         
-        log.info("WorkspaceController :: getWorkspacesByOwnerUserId :: Fetching workspaces for user :: {}", userId);
+        log.info("WorkspaceController :: getWorkspacesByOwnerUserId :: Received request to fetch workspaces for user :: {}", userId);
 
         List<WorkspaceResponse> workspaces = workspaceService.getWorkspacesByOwnerUserId(userId);
 
+        log.info("WorkspaceController :: getWorkspacesByOwnerUserId :: Successfully retrieved {} workspaces for user :: {}", 
+                workspaces.size(), userId);
         return ResponseEntity.ok(workspaces);
     }
 
@@ -103,36 +108,20 @@ public class WorkspaceController {
     )
     public ResponseEntity<List<WorkspaceResponse>> getWorkspacesAccessibleByUser(
             HttpServletRequest httpRequest) {
-        // Get the logged-in user ID from the header set by API Gateway
         String userIdHeader = httpRequest.getHeader("X-User-Id");
         if (userIdHeader == null) {
+            log.error("WorkspaceController :: getWorkspacesAccessibleByUser :: User ID not found in request header");
             throw new IllegalArgumentException("User ID not found in request header");
         }
         UUID userId = UUID.fromString(userIdHeader);
         
-        log.info("WorkspaceController :: getWorkspacesAccessibleByUser :: Fetching accessible workspaces for user :: {}", userId);
+        log.info("WorkspaceController :: getWorkspacesAccessibleByUser :: Received request to fetch accessible workspaces for user :: {}", userId);
 
         List<WorkspaceResponse> workspaces = workspaceService.getWorkspacesAccessibleByUser(userId);
 
+        log.info("WorkspaceController :: getWorkspacesAccessibleByUser :: Successfully retrieved {} accessible workspaces for user :: {}", 
+                workspaces.size(), userId);
         return ResponseEntity.ok(workspaces);
-    }
-
-    @PutMapping("/{id}")
-    @Operation(
-        summary = "Update workspace",
-        description = "Updates an existing workspace's details including name, description, visibility, and ownership."
-    )
-    public ResponseEntity<ApiResponse> updateWorkspace(
-            @Parameter(description = "UUID of the workspace to update", required = true)
-            @PathVariable UUID id,
-            @Valid @RequestBody WorkspaceCreateRequest request,
-            HttpServletRequest httpRequest) {
-        log.info("WorkspaceController :: updateWorkspace :: Updating workspace :: {}", id);
-
-        WorkspaceResponse workspaceResponse = workspaceService.updateWorkspace(id, request);
-        ApiResponse response = ApiResponse.success("Workspace updated successfully", workspaceResponse, httpRequest.getRequestURI());
-
-        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
@@ -144,11 +133,12 @@ public class WorkspaceController {
             @Parameter(description = "UUID of the workspace to delete", required = true)
             @PathVariable UUID id,
             HttpServletRequest httpRequest) {
-        log.info("WorkspaceController :: deleteWorkspace :: Deleting workspace :: {}", id);
+        log.info("WorkspaceController :: deleteWorkspace :: Received request to delete workspace :: {}", id);
 
         workspaceService.deleteWorkspace(id);
         ApiResponse response = ApiResponse.success("Workspace deleted successfully", null, httpRequest.getRequestURI());
 
+        log.info("WorkspaceController :: deleteWorkspace :: Workspace deleted successfully :: {}", id);
         return ResponseEntity.ok(response);
     }
 
@@ -165,12 +155,14 @@ public class WorkspaceController {
             @Parameter(description = "Access level to grant", required = true)
             @RequestParam WorkspaceAccess.AccessLevel accessLevel,
             HttpServletRequest httpRequest) {
-        log.info("WorkspaceController :: addUserToWorkspace :: Adding user {} to workspace {} with access level {}", 
+        log.info("WorkspaceController :: addUserToWorkspace :: Received request to add user :: User: {} :: Workspace: {} :: Access Level: {}", 
                 userId, workspaceId, accessLevel);
 
         workspaceService.addUserToWorkspace(workspaceId, userId, accessLevel);
         ApiResponse response = ApiResponse.success("User added to workspace successfully", null, httpRequest.getRequestURI());
 
+        log.info("WorkspaceController :: addUserToWorkspace :: User added successfully :: User: {} :: Workspace: {}", 
+                userId, workspaceId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -185,11 +177,14 @@ public class WorkspaceController {
             @Parameter(description = "UUID of the user to remove", required = true)
             @PathVariable UUID userId,
             HttpServletRequest httpRequest) {
-        log.info("WorkspaceController :: removeUserFromWorkspace :: Removing user {} from workspace {}", userId, workspaceId);
+        log.info("WorkspaceController :: removeUserFromWorkspace :: Received request to remove user :: User: {} :: Workspace: {}", 
+                userId, workspaceId);
 
         workspaceService.removeUserFromWorkspace(workspaceId, userId);
         ApiResponse response = ApiResponse.success("User removed from workspace successfully", null, httpRequest.getRequestURI());
 
+        log.info("WorkspaceController :: removeUserFromWorkspace :: User removed successfully :: User: {} :: Workspace: {}", 
+                userId, workspaceId);
         return ResponseEntity.ok(response);
     }
 
@@ -206,12 +201,14 @@ public class WorkspaceController {
             @Parameter(description = "New access level", required = true)
             @RequestParam WorkspaceAccess.AccessLevel accessLevel,
             HttpServletRequest httpRequest) {
-        log.info("WorkspaceController :: updateUserAccessLevel :: Updating access level for user {} in workspace {} to {}", 
+        log.info("WorkspaceController :: updateUserAccessLevel :: Received request to update access level :: User: {} :: Workspace: {} :: New Access Level: {}", 
                 userId, workspaceId, accessLevel);
 
         workspaceService.updateUserAccessLevel(workspaceId, userId, accessLevel);
         ApiResponse response = ApiResponse.success("User access level updated successfully", null, httpRequest.getRequestURI());
 
+        log.info("WorkspaceController :: updateUserAccessLevel :: Access level updated successfully :: User: {} :: Workspace: {}", 
+                userId, workspaceId);
         return ResponseEntity.ok(response);
     }
 
@@ -223,10 +220,12 @@ public class WorkspaceController {
     public ResponseEntity<List<UUID>> getWorkspaceUsers(
             @Parameter(description = "UUID of the workspace", required = true)
             @PathVariable UUID workspaceId) {
-        log.info("WorkspaceController :: getWorkspaceUsers :: Getting users for workspace {}", workspaceId);
+        log.info("WorkspaceController :: getWorkspaceUsers :: Received request to fetch users for workspace :: {}", workspaceId);
 
         List<UUID> userIds = workspaceService.getWorkspaceUsers(workspaceId);
 
+        log.info("WorkspaceController :: getWorkspaceUsers :: Successfully retrieved {} users for workspace :: {}", 
+                userIds.size(), workspaceId);
         return ResponseEntity.ok(userIds);
     }
 }

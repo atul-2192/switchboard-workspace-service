@@ -1,0 +1,103 @@
+### Build ###
+/target/
+/build/
+/out/
+/dist/
+/bin/
+/.gradle/
+/mvnw.cmd
+!src/main/**/build/
+
+### Logs ###
+*.log
+*.log.*
+logs/
+*.trace
+*.out
+
+### IDE ###
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+
+### System Files ###
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+*.jpi
+
+### Spring Boot ###
+# Application secrets (DO NOT COMMIT)
+application-local.properties
+application-local.yml
+application-dev.properties
+application-dev.yml
+.env
+.env.*
+
+### Cache ###
+*.cache
+.cache/
+spring.log
+*.pid
+*.seed
+
+### Maven ###
+/pom.xml.tag
+/pom.xml.releaseBackup
+/pom.xml.versionsBackup
+/pom.xml.next
+release.properties
+
+### Gradle ###
+.gradle/
+build/
+**/build/
+**/out/
+*.kts.lock
+
+### Node (if front-end inside same repo) ###
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+dist/
+
+### Test ###
+/test-output/
+/coverage/
+*.coverage
+*.lcov
+
+### Database dumps ###
+*.db
+*.sql
+*.sqlite
+
+### JetBrains ###
+*.idea/
+*.iws
+*.ipr
+*.iml
+
+### Mac ###
+*.DS_Store
+
+### Linux ###
+*~
+
+### Windows ###
+Thumbs.db

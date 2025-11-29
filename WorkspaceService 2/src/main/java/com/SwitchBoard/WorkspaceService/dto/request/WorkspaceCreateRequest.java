@@ -26,8 +26,7 @@ public class WorkspaceCreateRequest {
     @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
 
-    @NotNull(message = "Visibility is required")
-    private Workspace.WorkspaceVisibility visibility;
+    private Workspace.WorkspaceType workspaceType;
 
 
     private UUID ownerUserId;
@@ -51,28 +50,28 @@ public class WorkspaceCreateRequest {
     public List<String> validateUserAccess() {
         List<String> errors = new ArrayList<>();
         Set<UUID> allUsers = new HashSet<>();
-        
+
         // Check for duplicates in read access
         for (UUID userId : readAccessUserIds) {
             if (!allUsers.add(userId)) {
                 errors.add("User " + userId + " appears in multiple access lists");
             }
         }
-        
+
         // Check for duplicates in write access
         for (UUID userId : writeAccessUserIds) {
             if (!allUsers.add(userId)) {
                 errors.add("User " + userId + " appears in multiple access lists");
             }
         }
-        
+
         // Check for duplicates in admin access
         for (UUID userId : adminAccessUserIds) {
             if (!allUsers.add(userId)) {
                 errors.add("User " + userId + " appears in multiple access lists");
             }
         }
-        
+
         return errors;
     }
 }

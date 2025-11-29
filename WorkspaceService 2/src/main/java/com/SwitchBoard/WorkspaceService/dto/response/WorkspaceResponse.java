@@ -27,7 +27,7 @@ public class WorkspaceResponse {
     private String description;
     
     @Schema(description = "Workspace visibility level", example = "PUBLIC")
-    private Workspace.WorkspaceVisibility visibility;
+    private Workspace.WorkspaceType workspaceType;
     
     @Schema(description = "Owner user UUID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID ownerUserId;

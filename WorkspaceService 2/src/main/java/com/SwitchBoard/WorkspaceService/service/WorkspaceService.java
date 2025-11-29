@@ -17,17 +17,7 @@ public interface WorkspaceService {
     
     List<WorkspaceResponse> getWorkspacesAccessibleByUser(UUID userId);
     
-    List<WorkspaceResponse> getWorkspacesByVisibility(Workspace.WorkspaceVisibility visibility);
-    
-    List<WorkspaceResponse> searchWorkspacesByName(String name);
-    
-    WorkspaceResponse updateWorkspace(UUID id, WorkspaceCreateRequest request);
-    
     void deleteWorkspace(UUID id);
-    
-    Long getTaskCount(UUID workspaceId);
-    
-    Long getAssignmentCount(UUID workspaceId);
     
     // Workspace access management methods
     void addUserToWorkspace(UUID workspaceId, UUID userId, WorkspaceAccess.AccessLevel accessLevel);
@@ -37,6 +27,4 @@ public interface WorkspaceService {
     void updateUserAccessLevel(UUID workspaceId, UUID userId, WorkspaceAccess.AccessLevel accessLevel);
     
     List<UUID> getWorkspaceUsers(UUID workspaceId);
-    
-    boolean hasUserAccess(UUID workspaceId, UUID userId);
 }
