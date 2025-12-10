@@ -1,13 +1,12 @@
 package com.SwitchBoard.WorkspaceService.dto.request;
 
-import com.SwitchBoard.WorkspaceService.entity.AssignmentType;
+import com.SwitchBoard.WorkspaceService.entity.enums.AssignmentType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Data

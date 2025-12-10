@@ -1,7 +1,7 @@
 package com.SwitchBoard.WorkspaceService.repository;
 
 import com.SwitchBoard.WorkspaceService.entity.Task;
-import com.SwitchBoard.WorkspaceService.entity.TaskStatus;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

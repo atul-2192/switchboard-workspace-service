@@ -1,5 +1,6 @@
 package com.SwitchBoard.WorkspaceService.entity;
 
+import com.SwitchBoard.WorkspaceService.entity.enums.WorkspaceType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.HashSet;
@@ -24,8 +25,6 @@ public class Workspace extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private WorkspaceType workspaceType;
 
-    // Note: This references a user in another microservice
-    // No foreign key constraint should exist on this field
     @Column(name = "owner_user_id", nullable = false)
     private UUID ownerUserId;
 
@@ -34,23 +33,11 @@ public class Workspace extends BaseEntity {
     private Set<WorkspaceAccess> workspaceAccess = new HashSet<>();
 
     @OneToMany( cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "workspaceId") // creates FK in assignment table
+    @JoinColumn(name = "workspaceId")
+    @Builder.Default
     private Set<Assignment> assignments = new HashSet<>();
 
 
 
-    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Tag> tags = new HashSet<>();
-
-    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<ActivityLog> activityLogs = new HashSet<>();
-
-    public enum WorkspaceType {
-        DEFAULT,
-        ROADMAP,
-        GROUP_PROJECT
-    }
 }
 

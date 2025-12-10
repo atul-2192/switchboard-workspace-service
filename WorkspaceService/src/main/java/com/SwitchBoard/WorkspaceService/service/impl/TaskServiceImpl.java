@@ -1,11 +1,13 @@
 package com.SwitchBoard.WorkspaceService.service.impl;
 
+import com.SwitchBoard.WorkspaceService.dto.ApiResponse;
 import com.SwitchBoard.WorkspaceService.dto.request.TaskCreateRequest;
+import com.SwitchBoard.WorkspaceService.dto.request.TaskDto;
 import com.SwitchBoard.WorkspaceService.dto.response.TaskResponse;
-import com.SwitchBoard.WorkspaceService.dto.response.TagResponse;
 import com.SwitchBoard.WorkspaceService.entity.*;
 import com.SwitchBoard.WorkspaceService.Exception.BadRequestException;
 import com.SwitchBoard.WorkspaceService.Exception.ResourceNotFoundException;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import com.SwitchBoard.WorkspaceService.repository.*;
 import com.SwitchBoard.WorkspaceService.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,60 +28,27 @@ import java.util.stream.Collectors;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
-    private final WorkspaceRepository workspaceRepository;
-    private final TagRepository tagRepository;
 
     @Override
-    public TaskResponse createTask(TaskCreateRequest request) {
-        log.info("TaskServiceImpl :: createTask :: Creating task :: {}", request.getTitle());
-
-        // Validate workspace exists
-        Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
-                .orElseThrow(() -> {
-                    log.error("TaskServiceImpl :: createTask :: Workspace not found :: {}", request.getWorkspaceId());
-                    return new ResourceNotFoundException("Workspace not found with id: " + request.getWorkspaceId());
-                });
-
-        Task.TaskBuilder taskBuilder = Task.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .taskTypeKey(request.getTaskTypeKey())
-                .statusKey(request.getStatusKey() != null ? request.getStatusKey() : TaskStatus.BACKLOG)
-                .priority(request.getPriority())
-                .rewardPoints(request.getRewardPoints())
-                .estimatedHours(request.getEstimatedHours())
-                .titleColor(request.getTitleColor())
-                .deadline(request.getDeadline());
-
-
-        // Set assignee if provided
-        if (request.getAssigneeUserId() != null) {
-            taskBuilder.assigneeUserId(request.getAssigneeUserId());
-        }
-
-        // Set reporter if provided
-        if (request.getReporterUserId() != null) {
-            taskBuilder.reporterUserId(request.getReporterUserId());
-        }
-
-        Task task = taskBuilder.build();
-
-        // Set tags if provided
-        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
-            Set<Tag> tags = request.getTagIds().stream()
-                    .map(tagId -> tagRepository.findById(tagId)
-                            .orElseThrow(() -> {
-                                log.error("TaskServiceImpl :: createTask :: Tag not found :: {}", tagId);
-                                return new ResourceNotFoundException("Tag not found with id: " + tagId);
-                            }))
-                    .collect(Collectors.toSet());
-            task.setTags(tags);
-        }
-
-        Task savedTask = taskRepository.save(task);
-        log.info("TaskServiceImpl :: createTask :: Task created successfully :: {}", savedTask.getId());
-
-        return mapToTaskResponse(savedTask);
+    public List<Task> createTask(TaskCreateRequest request) {
+        log.info("TaskServiceImpl :: createTask :: Creating tasks");
+        List<Task> tasks= request.getTasks().stream().map(
+            taskDto -> {
+                return Task.builder()
+                        .title(taskDto.getTitle())
+                        .description(taskDto.getDescription())
+                        .statusKey(taskDto.getStatusKey())
+                        .priority(taskDto.getPriority())
+                        .rewardPoints(taskDto.getRewardPoints())
+                        .estimatedHours(taskDto.getEstimatedHours())
+                        .titleColor(taskDto.getTitleColor())
+                        .deadline(taskDto.getDeadline())
+                        .build();
+                    }
+                ).toList();
+        List<Task> savedTasks = taskRepository.saveAll(tasks);
+       log.info("TaskServiceImpl :: createTask :: Task saved successfully in DB");
+        return savedTasks;
     }
 
     @Override
@@ -106,17 +74,6 @@ public class TaskServiceImpl implements TaskService {
         Page<Task> tasks = taskRepository.findAll(pageable);
         return tasks.map(this::mapToTaskResponse);
     }
-
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<TaskResponse> getTasksByWorkspaceId(UUID workspaceId) {
-//        log.info("TaskServiceImpl :: getTasksByWorkspaceId :: Fetching tasks for workspace :: {}", workspaceId);
-//
-//        List<Task> tasks = taskRepository.findByWorkspaceId(workspaceId);
-//        return tasks.stream()
-//                .map(this::mapToTaskResponse)
-//                .collect(Collectors.toList());
-//    }
 
     @Override
     @Transactional(readOnly = true)
@@ -151,28 +108,6 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
     }
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<TaskResponse> getSubTasks(UUID parentTaskId) {
-//        log.info("TaskServiceImpl :: getSubTasks :: Fetching subtasks for parent :: {}", parentTaskId);
-//
-//        List<Task> tasks = taskRepository.findByParentTaskId(parentTaskId);
-//        return tasks.stream()
-//                .map(this::mapToTaskResponse)
-//                .collect(Collectors.toList());
-//    }
-//
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<TaskResponse> getRootTasksByWorkspaceId(UUID workspaceId) {
-//        log.info("TaskServiceImpl :: getRootTasksByWorkspaceId :: Fetching root tasks for workspace :: {}", workspaceId);
-//
-//        List<Task> tasks = taskRepository.findRootTasksByWorkspaceId(workspaceId);
-//        return tasks.stream()
-//                .map(this::mapToTaskResponse)
-//                .collect(Collectors.toList());
-//    }
-
     @Override
     @Transactional(readOnly = true)
     public List<TaskResponse> getTasksByStatus(TaskStatus status) {
@@ -184,17 +119,6 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
     }
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<TaskResponse> getTasksByWorkspaceAndStatus(UUID workspaceId, TaskStatus status) {
-//        log.info("TaskServiceImpl :: getTasksByWorkspaceAndStatus :: Fetching tasks :: workspace: {}, status: {}",
-//                workspaceId, status);
-//
-//        List<Task> tasks = taskRepository.findByWorkspaceIdAndStatusKey(workspaceId, status);
-//        return tasks.stream()
-//                .map(this::mapToTaskResponse)
-//                .collect(Collectors.toList());
-//    }
 
     @Override
     @Transactional(readOnly = true)
@@ -207,18 +131,6 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
     }
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<TaskResponse> searchTasksByTitle(UUID workspaceId, String title) {
-//        log.info("TaskServiceImpl :: searchTasksByTitle :: Searching tasks :: workspace: {}, title: {}",
-//                workspaceId, title);
-//
-//        List<Task> tasks = taskRepository.findByWorkspaceIdAndTitleContainingIgnoreCase(workspaceId, title);
-//        return tasks.stream()
-//                .map(this::mapToTaskResponse)
-//                .collect(Collectors.toList());
-//    }
-
     @Override
     public TaskResponse updateTask(UUID id, TaskCreateRequest request) {
         log.info("TaskServiceImpl :: updateTask :: Updating task :: {}", id);
@@ -228,54 +140,41 @@ public class TaskServiceImpl implements TaskService {
                     log.error("TaskServiceImpl :: updateTask :: Task not found :: {}", id);
                     return new ResourceNotFoundException("Task not found with id: " + id);
                 });
+        TaskDto taskDto = request.getTasks().get(0);
 
         // Update basic fields
-        if (request.getTitle() != null) {
-            task.setTitle(request.getTitle());
+        if (taskDto.getTitle() != null) {
+            task.setTitle(taskDto.getTitle());
         }
-        if (request.getDescription() != null) {
-            task.setDescription(request.getDescription());
-        }
-        if (request.getTaskTypeKey() != null) {
-            task.setTaskTypeKey(request.getTaskTypeKey());
-        }
-        if (request.getStatusKey() != null) {
-            task.setStatusKey(request.getStatusKey());
-        }
-        if (request.getPriority() != null) {
-            task.setPriority(request.getPriority());
-        }
-        if (request.getRewardPoints() != null) {
-            task.setRewardPoints(request.getRewardPoints());
-        }
-        if (request.getEstimatedHours() != null) {
-            task.setEstimatedHours(request.getEstimatedHours());
+        if (taskDto.getDescription() != null) {
+            task.setDescription(taskDto.getDescription());
         }
 
-        if (request.getTitleColor() != null) {
-            task.setTitleColor(request.getTitleColor());
+        if (taskDto.getStatusKey() != null) {
+            task.setStatusKey(taskDto.getStatusKey());
+        }
+        if (taskDto.getPriority() != null) {
+            task.setPriority(taskDto.getPriority());
+        }
+        if (taskDto.getRewardPoints() != null) {
+            task.setRewardPoints(taskDto.getRewardPoints());
+        }
+        if (taskDto.getEstimatedHours() != null) {
+            task.setEstimatedHours(taskDto.getEstimatedHours());
         }
 
-        if (request.getDeadline() != null) {
-            task.setDeadline(request.getDeadline());
+        if (taskDto.getTitleColor() != null) {
+            task.setTitleColor(taskDto.getTitleColor());
         }
 
-        // Update assignee if provided
+        if (taskDto.getDeadline() != null) {
+            task.setDeadline(taskDto.getDeadline());
+        }
+
         if (request.getAssigneeUserId() != null) {
             task.setAssigneeUserId(request.getAssigneeUserId());
         }
 
-        // Update tags if provided
-        if (request.getTagIds() != null) {
-            Set<Tag> tags = request.getTagIds().stream()
-                    .map(tagId -> tagRepository.findById(tagId)
-                            .orElseThrow(() -> {
-                                log.error("TaskServiceImpl :: updateTask :: Tag not found :: {}", tagId);
-                                return new ResourceNotFoundException("Tag not found with id: " + tagId);
-                            }))
-                    .collect(Collectors.toSet());
-            task.setTags(tags);
-        }
 
         Task updatedTask = taskRepository.save(task);
         log.info("TaskServiceImpl :: updateTask :: Task updated successfully :: {}", updatedTask.getId());
@@ -360,21 +259,12 @@ public class TaskServiceImpl implements TaskService {
         log.info("TaskServiceImpl :: deleteTask :: Task deleted successfully :: {}", id);
     }
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public Long getSubTaskCount(UUID parentTaskId) {
-//        log.info("TaskServiceImpl :: getSubTaskCount :: Counting subtasks :: {}", parentTaskId);
-//
-//        Long count = taskRepository.countSubTasksByParentTaskId(parentTaskId);
-//        return count != null ? count : 0L;
-//    }
 
     private TaskResponse mapToTaskResponse(Task task) {
         TaskResponse.TaskResponseBuilder builder = TaskResponse.builder()
                 .id(task.getId())
                 .title(task.getTitle())
                 .description(task.getDescription())
-                .taskTypeKey(task.getTaskTypeKey())
                 .statusKey(task.getStatusKey())
                 .priority(task.getPriority())
                 .rewardPoints(task.getRewardPoints())
@@ -396,34 +286,10 @@ public class TaskServiceImpl implements TaskService {
             builder.reporterUserId(task.getReporterUserId());
         }
 
-        // Set tags if present
-        if (task.getTags() != null && !task.getTags().isEmpty()) {
-            List<TagResponse> tagResponses = task.getTags().stream()
-                    .map(this::mapToTagResponse)
-                    .collect(Collectors.toList());
-            builder.tags(tagResponses);
-        }
-
-        // Set counts
-//        Long subTaskCount = getSubTaskCount(task.getId());
-//        builder.subTaskCount(subTaskCount.intValue());
-
         Integer commentCount = task.getComments() != null ? task.getComments().size() : 0;
         builder.commentCount(commentCount);
 
         return builder.build();
     }
 
-    private TagResponse mapToTagResponse(Tag tag) {
-        return TagResponse.builder()
-                .id(tag.getId())
-                .workspaceId(tag.getWorkspace() != null ? tag.getWorkspace().getId() : null)
-                .name(tag.getName())
-                .color(tag.getColor())
-                .description(tag.getDescription())
-                .taskCount(tag.getTasks() != null ? tag.getTasks().size() : 0)
-                .createdAt(tag.getCreatedAt())
-                .updatedAt(tag.getUpdatedAt())
-                .build();
-    }
 }

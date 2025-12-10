@@ -1,4 +1,4 @@
-package com.SwitchBoard.WorkspaceService.service;
+package com.SwitchBoard.WorkspaceService.service.impl;
 
 import com.SwitchBoard.WorkspaceService.dto.request.AssignmentCreateRequest;
 import com.SwitchBoard.WorkspaceService.dto.request.AssignmentUpdateRequest;
@@ -6,11 +6,14 @@ import com.SwitchBoard.WorkspaceService.dto.request.TaskCreateRequest;
 import com.SwitchBoard.WorkspaceService.dto.response.AssignmentResponse;
 import com.SwitchBoard.WorkspaceService.dto.response.TaskResponse;
 import com.SwitchBoard.WorkspaceService.entity.*;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import com.SwitchBoard.WorkspaceService.repository.AssignmentRepository;
 import com.SwitchBoard.WorkspaceService.repository.TaskRepository;
 import com.SwitchBoard.WorkspaceService.repository.WorkspaceRepository;
 import com.SwitchBoard.WorkspaceService.Exception.ResourceNotFoundException;
 import com.SwitchBoard.WorkspaceService.Exception.BadRequestException;
+import com.SwitchBoard.WorkspaceService.service.TaskAssignmentService;
+import com.SwitchBoard.WorkspaceService.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,7 +41,6 @@ public class AssignmentService {
     public AssignmentResponse createAssignment(AssignmentCreateRequest request) {
         log.info("AssignmentService :: createAssignment :: Creating assignment :: {}", request.getTitle());
 
-        // Validate workspace exists
         Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Workspace not found with ID: " + request.getWorkspaceId()));
 
@@ -50,24 +52,17 @@ public class AssignmentService {
                 .totalRewardPoints(request.getTotalRewardPoints())
                 .totalEstimatedHours(request.getTotalEstimatedHours())
                 .deadline(request.getDeadline())
-//                .roadmap(request.getRoadmap())getRoadmap
                 .build();
 
         Assignment savedAssignment = assignmentRepository.save(assignment);
         log.info("AssignmentService :: createAssignment :: Assignment created :: {}", savedAssignment.getId());
 
-        // Handle task associations
-        if (request.getTaskIds() != null && !request.getTaskIds().isEmpty()) {
-            addTasksToAssignment(savedAssignment.getId(), request.getTaskIds());
-        }
-
-        // Handle new task creation
-        if (request.getNewTasks() != null && !request.getNewTasks().isEmpty()) {
-            for (TaskCreateRequest taskRequest : request.getNewTasks()) {
-                taskRequest.setAssignmentId(savedAssignment.getId());
-                taskRequest.setWorkspaceId(request.getWorkspaceId());
-                taskService.createTask(taskRequest);
-            }
+        workspace.getAssignments().add(assignment);
+        workspaceRepository.save(workspace);
+        log.info("AssignmentService :: createAssignment :: Assignment added to workspace :: {}", workspace.getId());
+        if (request.getNewTasks() != null ) {
+            log.info("AssignmentService :: createAssignment :: Creating tasks for assignment");
+                this.addTasksToAssignment(assignment.getId(),request.getNewTasks());
         }
 
         return convertToAssignmentResponse(savedAssignment, true);
@@ -161,20 +156,16 @@ public class AssignmentService {
     }
 
     @Transactional
-    public AssignmentResponse addTasksToAssignment(UUID assignmentId, List<UUID> taskIds) {
+    public AssignmentResponse addTasksToAssignment(UUID assignmentId, TaskCreateRequest taskCreateRequest) {
         log.info("AssignmentService :: addTasksToAssignment :: Adding {} tasks to assignment :: {}", 
-                taskIds.size(), assignmentId);
+                taskCreateRequest.getTasks().size(), assignmentId);
+        List<Task> tasks = taskService.createTask(taskCreateRequest);
 
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment not found with ID: " + assignmentId));
 
-        List<Task> tasks = taskRepository.findAllById(taskIds);
-        if (tasks.size() != taskIds.size()) {
-            throw new BadRequestException("One or more tasks not found");
-        }
-
-
-        taskRepository.saveAll(tasks);
+        assignment.getTasks().addAll(tasks);
+        assignmentRepository.save(assignment);
         log.info("AssignmentService :: addTasksToAssignment :: {} tasks added to assignment :: {}", 
                 tasks.size(), assignmentId);
 
@@ -189,11 +180,9 @@ public class AssignmentService {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment not found with ID: " + assignmentId));
 
-        List<Task> tasks = taskRepository.findAllById(taskIds);
-
-        taskRepository.saveAll(tasks);
+         taskRepository.deleteAllById(taskIds);
         log.info("AssignmentService :: removeTasksFromAssignment :: {} tasks removed from assignment :: {}", 
-                tasks.size(), assignmentId);
+                taskIds.size(), assignmentId);
 
         return convertToAssignmentResponse(assignment, true);
     }
@@ -258,14 +247,12 @@ public class AssignmentService {
     public List<TaskResponse> getTasksByAssignmentId(UUID assignmentId) {
         log.info("AssignmentService :: getTasksByAssignmentId :: Fetching tasks for assignment :: {}", assignmentId);
 
-        // Verify assignment exists
-        if (!assignmentRepository.existsById(assignmentId)) {
-            throw new ResourceNotFoundException("Assignment not found with ID: " + assignmentId);
-        }
-
         List<Task> tasks = taskRepository.findByAssignmentId(assignmentId);
         return tasks.stream()
-                .map(this::convertToTaskResponse)
+                .map(task -> {
+                    task.setStatusKey(setTaskStatus(task));
+                    return convertToTaskResponse(task);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -323,5 +310,15 @@ public class AssignmentService {
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();
+    }
+
+    private TaskStatus setTaskStatus(Task task) {
+        if (task.getCompletedAt() != null) {
+            return TaskStatus.COMPLETED;
+        } else if (task.getDeadline() != null && task.getDeadline().isBefore(Instant.now())) {
+            return TaskStatus.BACKLOG;
+        } else {
+            return TaskStatus.ONGOING;
+        }
     }
 }

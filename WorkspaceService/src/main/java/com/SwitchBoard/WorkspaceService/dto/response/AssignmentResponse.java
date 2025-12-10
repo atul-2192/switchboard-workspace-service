@@ -1,6 +1,6 @@
 package com.SwitchBoard.WorkspaceService.dto.response;
 
-import com.SwitchBoard.WorkspaceService.entity.AssignmentType;
+import com.SwitchBoard.WorkspaceService.entity.enums.AssignmentType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,21 +16,18 @@ import java.util.UUID;
 public class AssignmentResponse {
 
     private UUID id;
-    private UUID workspaceId;
     private String title;
     private String description;
     private AssignmentType assignmentTypeKey;
     private Integer totalRewardPoints;
     private Double totalEstimatedHours;
     private Instant deadline;
-    private UUID roadmapId;
     
     // Assignment statistics
     private Integer totalTasks;
     private Integer completedTasks;
     private Integer pendingTasks;
     private Double completionPercentage;
-    private Double totalSpentHours;
     
     // Audit fields
     private Instant createdAt;

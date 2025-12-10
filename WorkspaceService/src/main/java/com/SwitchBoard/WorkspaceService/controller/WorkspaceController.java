@@ -1,9 +1,7 @@
 package com.SwitchBoard.WorkspaceService.controller;
 
 import com.SwitchBoard.WorkspaceService.dto.ApiResponse;
-import com.SwitchBoard.WorkspaceService.dto.request.WorkspaceCreateRequest;
 import com.SwitchBoard.WorkspaceService.dto.response.WorkspaceResponse;
-import com.SwitchBoard.WorkspaceService.entity.Workspace;
 import com.SwitchBoard.WorkspaceService.entity.WorkspaceAccess;
 import com.SwitchBoard.WorkspaceService.service.WorkspaceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,34 +30,20 @@ public class WorkspaceController {
 
     private final WorkspaceService workspaceService;
 
-    @PostMapping
+    @PostMapping("/activate/{userId}")
     @Operation(
-        summary = "Create a new workspace",
-        description = "Creates a new workspace that serves as an organizational container for assignments, tasks, and learning activities. Workspaces enable multi-tenancy, access control, and logical separation of different learning environments or projects."
+        summary = "Activate default workspace for user",
+        description = "Activates the default workspace for a user upon their first login or account creation."
     )
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Workspace created successfully",
-            content = @Content(schema = @Schema(implementation = ApiResponse.class))),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request data"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<ApiResponse> createWorkspace(
-            @Parameter(description = "Workspace creation request with workspace details", required = true)
-            @Valid @RequestBody WorkspaceCreateRequest request,
-            @RequestHeader("X-User-Id") String userIdHeader) {
-        log.info("WorkspaceController :: createWorkspace :: Received request to create workspace :: {} :: User: {}", 
-                request.getName(), userIdHeader);
-        
-        UUID userId = UUID.fromString(userIdHeader);
-        request.setOwnerUserId(userId);
-
-        WorkspaceResponse workspaceResponse = workspaceService.createWorkspace(request);
-        ApiResponse response = ApiResponse.success("Workspace created successfully ", workspaceResponse, "/api/v1/workspaces/" + workspaceResponse.getId());
-
-        log.info("WorkspaceController :: createWorkspace :: Workspace created successfully :: ID: {} :: Name: {}", 
-                workspaceResponse.getId(), workspaceResponse.getName());
+    public ResponseEntity<ApiResponse> activateWorkspace(
+            @Parameter(description = "UUID of the user", required = true)
+            @PathVariable UUID userId) {
+        log.info("WorkspaceController :: activateWorkspace :: Received request to activate default workspace for user :: {}", userId);
+        ApiResponse response = workspaceService.activateWorkspace(userId);
+        log.info("WorkspaceController :: activateWorkspace :: Default workspace activated for user :: {}", userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
 
     @GetMapping("/{id}")
     @Operation(
@@ -136,7 +120,7 @@ public class WorkspaceController {
         log.info("WorkspaceController :: deleteWorkspace :: Received request to delete workspace :: {}", id);
 
         workspaceService.deleteWorkspace(id);
-        ApiResponse response = ApiResponse.success("Workspace deleted successfully", null, httpRequest.getRequestURI());
+        ApiResponse response = ApiResponse.response("Workspace deleted successfully", null, httpRequest.getRequestURI());
 
         log.info("WorkspaceController :: deleteWorkspace :: Workspace deleted successfully :: {}", id);
         return ResponseEntity.ok(response);
@@ -159,7 +143,7 @@ public class WorkspaceController {
                 userId, workspaceId, accessLevel);
 
         workspaceService.addUserToWorkspace(workspaceId, userId, accessLevel);
-        ApiResponse response = ApiResponse.success("User added to workspace successfully", null, httpRequest.getRequestURI());
+        ApiResponse response = ApiResponse.response("User added to workspace successfully", null, httpRequest.getRequestURI());
 
         log.info("WorkspaceController :: addUserToWorkspace :: User added successfully :: User: {} :: Workspace: {}", 
                 userId, workspaceId);
@@ -181,7 +165,7 @@ public class WorkspaceController {
                 userId, workspaceId);
 
         workspaceService.removeUserFromWorkspace(workspaceId, userId);
-        ApiResponse response = ApiResponse.success("User removed from workspace successfully", null, httpRequest.getRequestURI());
+        ApiResponse response = ApiResponse.response("User removed from workspace successfully", null, httpRequest.getRequestURI());
 
         log.info("WorkspaceController :: removeUserFromWorkspace :: User removed successfully :: User: {} :: Workspace: {}", 
                 userId, workspaceId);
@@ -205,7 +189,7 @@ public class WorkspaceController {
                 userId, workspaceId, accessLevel);
 
         workspaceService.updateUserAccessLevel(workspaceId, userId, accessLevel);
-        ApiResponse response = ApiResponse.success("User access level updated successfully", null, httpRequest.getRequestURI());
+        ApiResponse response = ApiResponse.response("User access level updated successfully", null, httpRequest.getRequestURI());
 
         log.info("WorkspaceController :: updateUserAccessLevel :: Access level updated successfully :: User: {} :: Workspace: {}", 
                 userId, workspaceId);

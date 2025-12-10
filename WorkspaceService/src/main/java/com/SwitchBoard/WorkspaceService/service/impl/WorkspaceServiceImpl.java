@@ -1,9 +1,12 @@
 package com.SwitchBoard.WorkspaceService.service.impl;
 
-import com.SwitchBoard.WorkspaceService.dto.request.WorkspaceCreateRequest;
+import com.SwitchBoard.WorkspaceService.config.Constant;
+import com.SwitchBoard.WorkspaceService.dto.ApiResponse;
 import com.SwitchBoard.WorkspaceService.dto.response.WorkspaceResponse;
+import com.SwitchBoard.WorkspaceService.entity.Assignment;
 import com.SwitchBoard.WorkspaceService.entity.Workspace;
 import com.SwitchBoard.WorkspaceService.entity.WorkspaceAccess;
+import com.SwitchBoard.WorkspaceService.entity.enums.WorkspaceType;
 import com.SwitchBoard.WorkspaceService.repository.WorkspaceRepository;
 import com.SwitchBoard.WorkspaceService.repository.WorkspaceAccessRepository;
 import com.SwitchBoard.WorkspaceService.service.WorkspaceService;
@@ -19,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.SwitchBoard.WorkspaceService.config.Constant.*;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,119 +32,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceAccessRepository workspaceAccessRepository;
 
-    // Constants for default workspace configurations
-    private static final String DEFAULT_WORKSPACE_NAME = "Default Workspace";
-    private static final String DEFAULT_WORKSPACE_DESC = "Your personal space to organize tasks, ideas, and notes. Only you have access to this workspace.";
-    private static final String ROADMAP_WORKSPACE_NAME = "Roadmap Workspace";
-    private static final String ROADMAP_WORKSPACE_DESC = "A dedicated workspace to manage roadmaps, milestones, and learning or project journeys.";
-    private static final String PROJECT_WORKSPACE_NAME = "Project Workspace";
-    private static final String PROJECT_WORKSPACE_DESC = "A collaborative workspace for teams to work together on tasks, discussions, and shared goals.";
-
-    @Override
-    @Transactional
-    public WorkspaceResponse createWorkspace(WorkspaceCreateRequest request) {
-        log.info("WorkspaceServiceImpl :: createWorkspace :: Started creating workspace :: {} for owner :: {}", 
-                request.getName(), request.getOwnerUserId());
-        
-        log.debug("WorkspaceServiceImpl :: createWorkspace :: Request details :: Name: {}, Description: {}", 
-                request.getName(), request.getDescription());
-
-        Workspace workspace = Workspace.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .ownerUserId(request.getOwnerUserId())
-                .build();
-
-        Workspace savedWorkspace = workspaceRepository.save(workspace);
-        log.info("WorkspaceServiceImpl :: createWorkspace :: Workspace created successfully :: ID: {}, Name: {}", 
-                savedWorkspace.getId(), savedWorkspace.getName());
-
-        // Validate that no user appears in multiple access lists
-        log.debug("WorkspaceServiceImpl :: createWorkspace :: Validating user access lists");
-        List<String> validationErrors = request.validateUserAccess();
-        if (!validationErrors.isEmpty()) {
-            log.error("WorkspaceServiceImpl :: createWorkspace :: User access validation failed :: Errors: {}", validationErrors);
-            throw new BadRequestException("User access validation failed: " + String.join(", ", validationErrors));
-        }
-
-        // Create workspace access records for specified users
-        log.debug("WorkspaceServiceImpl :: createWorkspace :: Creating user access records for workspace :: {}", savedWorkspace.getId());
-        createUserAccessRecords(savedWorkspace, request);
-
-        log.info("WorkspaceServiceImpl :: createWorkspace :: Workspace creation completed successfully :: {}", savedWorkspace.getId());
-        return convertToWorkspaceResponse(savedWorkspace);
-    }
-
-    /**
-     * Creates user access records for the workspace based on the three access lists
-     */
-    private void createUserAccessRecords(Workspace workspace, WorkspaceCreateRequest request) {
-        log.debug("WorkspaceServiceImpl :: createUserAccessRecords :: Creating access records for workspace :: {}", workspace.getId());
-        
-        List<WorkspaceAccess> accessRecords = new ArrayList<>();
-        int readAccessCount = 0;
-        int writeAccessCount = 0;
-        int adminAccessCount = 0;
-
-        // Create READ access records
-        if (request.getReadAccessUserIds() != null) {
-            log.debug("WorkspaceServiceImpl :: createUserAccessRecords :: Processing {} read access users", 
-                    request.getReadAccessUserIds().size());
-            for (UUID userId : request.getReadAccessUserIds()) {
-                if (!userId.equals(request.getOwnerUserId())) {
-                    accessRecords.add(WorkspaceAccess.builder()
-                            .workspace(workspace)
-                            .userId(userId)
-                            .accessLevel(WorkspaceAccess.AccessLevel.read)
-                            .isActive(true)
-                            .build());
-                    readAccessCount++;
-                }
-            }
-        }
-
-        // Create WRITE access records
-        if (request.getWriteAccessUserIds() != null) {
-            log.debug("WorkspaceServiceImpl :: createUserAccessRecords :: Processing {} write access users", 
-                    request.getWriteAccessUserIds().size());
-            for (UUID userId : request.getWriteAccessUserIds()) {
-                if (!userId.equals(request.getOwnerUserId())) {
-                    accessRecords.add(WorkspaceAccess.builder()
-                            .workspace(workspace)
-                            .userId(userId)
-                            .accessLevel(WorkspaceAccess.AccessLevel.WRITE)
-                            .isActive(true)
-                            .build());
-                    writeAccessCount++;
-                }
-            }
-        }
-
-        // Create ADMIN access records
-        if (request.getAdminAccessUserIds() != null) {
-            log.debug("WorkspaceServiceImpl :: createUserAccessRecords :: Processing {} admin access users", 
-                    request.getAdminAccessUserIds().size());
-            for (UUID userId : request.getAdminAccessUserIds()) {
-                if (!userId.equals(request.getOwnerUserId())) {
-                    accessRecords.add(WorkspaceAccess.builder()
-                            .workspace(workspace)
-                            .userId(userId)
-                            .accessLevel(WorkspaceAccess.AccessLevel.ADMIN)
-                            .isActive(true)
-                            .build());
-                    adminAccessCount++;
-                }
-            }
-        }
-
-        if (!accessRecords.isEmpty()) {
-            workspaceAccessRepository.saveAll(accessRecords);
-            log.info("WorkspaceServiceImpl :: createUserAccessRecords :: Access records created successfully :: Workspace: {} :: Total: {} (READ: {}, WRITE: {}, ADMIN: {})", 
-                    workspace.getId(), accessRecords.size(), readAccessCount, writeAccessCount, adminAccessCount);
-        } else {
-            log.debug("WorkspaceServiceImpl :: createUserAccessRecords :: No access records to create for workspace :: {}", workspace.getId());
-        }
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -190,22 +82,22 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         try {
             Workspace defaultWorkspace = Workspace.builder()
                     .name(DEFAULT_WORKSPACE_NAME)
-                    .description(DEFAULT_WORKSPACE_DESC)
-                    .workspaceType(Workspace.WorkspaceType.DEFAULT)
+                    .description(Constant.DEFAULT_WORKSPACE_DESC)
+                    .workspaceType(WorkspaceType.DEFAULT)
                     .ownerUserId(ownerUserId)
                     .build();
             
             Workspace roadmapWorkspace = Workspace.builder()
-                    .name(ROADMAP_WORKSPACE_NAME)
-                    .description(ROADMAP_WORKSPACE_DESC)
-                    .workspaceType(Workspace.WorkspaceType.ROADMAP)
+                    .name(Constant.ROADMAP_WORKSPACE_NAME)
+                    .description(Constant.ROADMAP_WORKSPACE_DESC)
+                    .workspaceType(WorkspaceType.ROADMAP)
                     .ownerUserId(ownerUserId)
                     .build();
             
             Workspace projectWorkspace = Workspace.builder()
-                    .name(PROJECT_WORKSPACE_NAME)
-                    .description(PROJECT_WORKSPACE_DESC)
-                    .workspaceType(Workspace.WorkspaceType.GROUP_PROJECT)
+                    .name(Constant.PROJECT_WORKSPACE_NAME)
+                    .description(Constant.PROJECT_WORKSPACE_DESC)
+                    .workspaceType(WorkspaceType.GROUP_PROJECT)
                     .ownerUserId(ownerUserId)
                     .build();
             
@@ -363,6 +255,47 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 userIds.size(), workspaceId);
         
         return userIds;
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse activateWorkspace(UUID userId) {
+        log.info("WorkspaceServiceImpl :: activateWorkspace :: Activating default workspaces for user :: {}", userId);
+
+        List<Workspace> existingWorkspaces = workspaceRepository.findByOwnerUserId(userId);
+
+        if (!existingWorkspaces.isEmpty()) {
+            log.warn("WorkspaceServiceImpl :: activateWorkspace :: User :: {} already has workspaces, activation skipped", userId);
+            return ApiResponse.response("User already has workspaces", false);
+        }
+
+        createDefaultWorkspaces(userId);
+
+        log.info("WorkspaceServiceImpl :: activateWorkspace :: Successfully activated default workspaces for user :: {}", userId);
+        return ApiResponse.response("Default workspaces activated successfully", true);
+    }
+
+    @Override
+    public Workspace getRoadmapWorkspaceByUserId(UUID userId) {
+        log.info("WorkspaceServiceImpl :: getRoadmapWorkspaceByUserId :: Fetching roadmap workspace for user :: {}", userId);
+
+        List<Workspace> workspaces = workspaceRepository.findByOwnerUserId(userId);
+        if(workspaces.isEmpty()) {
+            log.error("WorkspaceServiceImpl :: getRoadmapWorkspaceByUserId :: No workspaces found for user :: {}", userId);
+            workspaces=createDefaultWorkspaces(userId);
+        }
+
+
+        for (Workspace workspace : workspaces) {
+            if (workspace.getWorkspaceType() == WorkspaceType.ROADMAP) {
+                log.info("WorkspaceServiceImpl :: getRoadmapWorkspaceByUserId :: Found roadmap workspace :: {} for user :: {}",
+                        workspace.getId(), userId);
+                return workspace;
+            }
+        }
+
+        log.error("WorkspaceServiceImpl :: getRoadmapWorkspaceByUserId :: Roadmap workspace not found for user :: {}", userId);
+        throw new ResourceNotFoundException("Roadmap workspace not found for user with ID: " + userId);
     }
 
     private WorkspaceResponse convertToWorkspaceResponse(Workspace workspace) {

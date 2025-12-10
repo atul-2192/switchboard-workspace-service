@@ -1,5 +1,6 @@
 package com.SwitchBoard.WorkspaceService.entity;
 
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
@@ -29,10 +30,6 @@ public class TaskAssignment extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private TaskStatus status = TaskStatus.ONGOING;
-
-    // Individual progress tracking for this user
-    @Builder.Default
-    private Double spentHours = 0.0;
     
     private Integer rewardPointsEarned; // Points earned by this specific user
     

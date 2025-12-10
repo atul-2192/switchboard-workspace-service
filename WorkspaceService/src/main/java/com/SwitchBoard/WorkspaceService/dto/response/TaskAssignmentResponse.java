@@ -1,6 +1,6 @@
 package com.SwitchBoard.WorkspaceService.dto.response;
 
-import com.SwitchBoard.WorkspaceService.entity.TaskStatus;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import com.SwitchBoard.WorkspaceService.entity.TaskAssignment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
