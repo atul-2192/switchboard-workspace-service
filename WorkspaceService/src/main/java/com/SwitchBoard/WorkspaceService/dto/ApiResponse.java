@@ -31,7 +31,8 @@ public class ApiResponse {
     @Schema(description = "API endpoint path", example = "/api/v1/users")
     private String path;
 
-    public static ApiResponse response(String message, boolean success){
+    public static ApiResponse response(String message, boolean success)
+    {
         return new ApiResponse(success, message, null, null, LocalDateTime.now(), null);
     }
     

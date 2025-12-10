@@ -1,13 +1,12 @@
 package com.SwitchBoard.WorkspaceService.dto.request;
 
-import com.SwitchBoard.WorkspaceService.entity.AssignmentType;
+import com.SwitchBoard.WorkspaceService.entity.enums.AssignmentType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -36,12 +35,5 @@ public class AssignmentCreateRequest {
     private Double totalEstimatedHours;
 
     private Instant deadline;
-
-//    private UUID roadmapId; // Optional, only for ROADMAP type assignments
-
-    // List of task IDs to be associated with this assignment (optional)
-    private List<UUID> taskIds;
-
-    // List of new tasks to be created with this assignment (optional)
-    private List<TaskCreateRequest> newTasks;
+    private TaskCreateRequest newTasks;
 }

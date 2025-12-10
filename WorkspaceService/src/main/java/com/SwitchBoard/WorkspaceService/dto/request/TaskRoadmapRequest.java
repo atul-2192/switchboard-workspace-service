@@ -21,4 +21,5 @@ public class TaskRoadmapRequest {
     private UUID assignmentId;
     private String topic;
     private int orderNumber;
+    private Double estimatedHours;
 }

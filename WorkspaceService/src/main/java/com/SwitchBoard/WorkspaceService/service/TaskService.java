@@ -1,17 +1,19 @@
 package com.SwitchBoard.WorkspaceService.service;
 
+import com.SwitchBoard.WorkspaceService.dto.ApiResponse;
 import com.SwitchBoard.WorkspaceService.dto.request.TaskCreateRequest;
 import com.SwitchBoard.WorkspaceService.dto.response.TaskResponse;
-import com.SwitchBoard.WorkspaceService.entity.TaskStatus;
+import com.SwitchBoard.WorkspaceService.entity.Task;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import java.time.Instant;
+
 import java.util.List;
 import java.util.UUID;
 
 public interface TaskService {
 
-    TaskResponse createTask(TaskCreateRequest request);
+    List<Task> createTask(TaskCreateRequest request);
     
     TaskResponse getTaskById(UUID id);
     

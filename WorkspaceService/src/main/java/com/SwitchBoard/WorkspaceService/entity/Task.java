@@ -1,5 +1,6 @@
 package com.SwitchBoard.WorkspaceService.entity;
 
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
@@ -26,15 +27,14 @@ public class Task extends BaseEntity {
 
     @Column(nullable = false)
     private String title;
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
-    
-    private String taskTypeKey;  // e.g., APPLY_JOB, READ_TOPIC
-    
+
+
     @Enumerated(EnumType.STRING)
     private TaskStatus statusKey;    // BACKLOG, ONGOING, COMPLETED
-    
+
     private Integer priority;
     private Integer rewardPoints;
     private Double estimatedHours;
@@ -49,15 +49,6 @@ public class Task extends BaseEntity {
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Comment> comments = new HashSet<>();
-
-    @ManyToMany
-    @JoinTable(
-            name = "task_tag",
-            joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id")
-    )
-    @Builder.Default
-    private Set<Tag> tags = new HashSet<>();
 
     @Column(name = "assignmentId", insertable = false, updatable = false)
     private UUID assignmentId;

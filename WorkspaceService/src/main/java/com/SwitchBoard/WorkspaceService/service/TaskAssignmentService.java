@@ -3,7 +3,7 @@ package com.SwitchBoard.WorkspaceService.service;
 import com.SwitchBoard.WorkspaceService.dto.request.TaskUserAssignmentRequest;
 import com.SwitchBoard.WorkspaceService.dto.request.TaskAssignmentUpdateRequest;
 import com.SwitchBoard.WorkspaceService.dto.response.TaskAssignmentResponse;
-import com.SwitchBoard.WorkspaceService.entity.TaskStatus;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import java.util.List;
 import java.util.UUID;
 

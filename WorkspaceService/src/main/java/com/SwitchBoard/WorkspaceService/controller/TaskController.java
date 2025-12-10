@@ -3,7 +3,8 @@ package com.SwitchBoard.WorkspaceService.controller;
 import com.SwitchBoard.WorkspaceService.dto.ApiResponse;
 import com.SwitchBoard.WorkspaceService.dto.request.TaskCreateRequest;
 import com.SwitchBoard.WorkspaceService.dto.response.TaskResponse;
-import com.SwitchBoard.WorkspaceService.entity.TaskStatus;
+import com.SwitchBoard.WorkspaceService.entity.Task;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import com.SwitchBoard.WorkspaceService.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,23 +32,23 @@ public class TaskController {
 
     private final TaskService taskService;
 
-    @PostMapping
-    @Operation(
-        summary = "Create a new task",
-        description = "Creates a new task in the system. Tasks are the core learning activities that can be assigned to users, organized in workspaces, and tracked for progress. A task can be part of an assignment, have subtasks, include due dates, and support time tracking for productivity analysis."
-    )
-    public ResponseEntity<ApiResponse> createTask(
-            @Parameter(description = "Task creation request with all task details", required = true)
-            @Valid @RequestBody TaskCreateRequest request, 
-            HttpServletRequest httpRequest) {
-        log.info("TaskController :: createTask :: Creating new task :: {}", request.getTitle());
-        
-        TaskResponse taskResponse = taskService.createTask(request);
-        ApiResponse response = ApiResponse.response("Task created successfully", taskResponse, httpRequest.getRequestURI());
-        
-        log.info("TaskController :: createTask :: Task created successfully :: {}", taskResponse.getId());
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
+//    @PostMapping
+//    @Operation(
+//        summary = "Create a new task",
+//        description = "Creates a new task in the system. Tasks are the core learning activities that can be assigned to users, organized in workspaces, and tracked for progress. A task can be part of an assignment, have subtasks, include due dates, and support time tracking for productivity analysis."
+//    )
+//    public ResponseEntity<ApiResponse> createTask(
+//            @Parameter(description = "Task creation request with all task details", required = true)
+//            @Valid @RequestBody TaskCreateRequest request,
+//            HttpServletRequest httpRequest) {
+//        log.info("TaskController :: createTask :: Creating new task");
+//
+//         List<Task> taskList = taskService.createTask(request);
+//        ApiResponse response = ApiResponse.response( taskList.size() + " Task created successfully ",true);
+//
+//        log.info("TaskController :: createTask :: Task created successfully ");
+//        return new ResponseEntity<>(response, HttpStatus.CREATED);
+//    }
 
     @GetMapping("/{id}")
     @Operation(

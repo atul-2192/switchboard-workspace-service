@@ -4,9 +4,10 @@ import com.SwitchBoard.WorkspaceService.dto.ApiResponse;
 import com.SwitchBoard.WorkspaceService.dto.request.AssignmentCreateRequest;
 import com.SwitchBoard.WorkspaceService.dto.request.AssignmentTaskManagementRequest;
 import com.SwitchBoard.WorkspaceService.dto.request.AssignmentUpdateRequest;
+import com.SwitchBoard.WorkspaceService.dto.request.TaskCreateRequest;
 import com.SwitchBoard.WorkspaceService.dto.response.AssignmentResponse;
 import com.SwitchBoard.WorkspaceService.dto.response.TaskResponse;
-import com.SwitchBoard.WorkspaceService.service.AssignmentService;
+import com.SwitchBoard.WorkspaceService.service.impl.AssignmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -176,14 +177,14 @@ public class AssignmentController {
             @Parameter(description = "UUID of the assignment to add tasks to", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
             @PathVariable UUID id,
             @Parameter(description = "Request containing list of task IDs to add", required = true)
-            @Valid @RequestBody AssignmentTaskManagementRequest request,
+            @Valid @RequestBody TaskCreateRequest taskCreateRequest,
             HttpServletRequest httpRequest) {
-        log.info("AssignmentController :: addTasksToAssignment :: Adding {} tasks to assignment :: {}", request.getTaskIds().size(), id);
+        log.info("AssignmentController :: addTasksToAssignment :: Adding {} tasks to assignment :: {}", taskCreateRequest.getTasks().size(), id);
 
-        AssignmentResponse assignmentResponse = assignmentService.addTasksToAssignment(id, request.getTaskIds());
+        AssignmentResponse assignmentResponse = assignmentService.addTasksToAssignment(id , taskCreateRequest);
         ApiResponse response = ApiResponse.response("Tasks added to assignment successfully", assignmentResponse, httpRequest.getRequestURI());
 
-        log.info("AssignmentController :: addTasksToAssignment :: {} tasks added to assignment :: {}", request.getTaskIds().size(), id);
+        log.info("AssignmentController :: addTasksToAssignment :: {} tasks added to assignment :: {}", taskCreateRequest.getTasks().size(), id);
         return ResponseEntity.ok(response);
     }
 

@@ -1,6 +1,7 @@
 package com.SwitchBoard.WorkspaceService.dto.response;
 
 import com.SwitchBoard.WorkspaceService.entity.Workspace;
+import com.SwitchBoard.WorkspaceService.entity.enums.WorkspaceType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +28,7 @@ public class WorkspaceResponse {
     private String description;
     
     @Schema(description = "Workspace visibility level", example = "PUBLIC")
-    private Workspace.WorkspaceVisibility visibility;
+    private WorkspaceType workspaceType;
     
     @Schema(description = "Owner user UUID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID ownerUserId;
@@ -37,16 +38,8 @@ public class WorkspaceResponse {
     
     @Schema(description = "Number of users with access to workspace", example = "10")
     private Integer userAccessCount;
-    
-    @Schema(description = "Number of tasks in workspace", example = "25")
-    private Integer taskCount;
-    
-    @Schema(description = "Number of assignments in workspace", example = "5")
-    private Integer assignmentCount;
-    
-    @Schema(description = "Number of tags in workspace", example = "10")
-    private Integer tagCount;
-    
+
+
     @Schema(description = "Workspace creation timestamp")
     private Instant createdAt;
     

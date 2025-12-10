@@ -4,11 +4,11 @@ import com.SwitchBoard.WorkspaceService.dto.request.TaskUserAssignmentRequest;
 import com.SwitchBoard.WorkspaceService.dto.request.TaskAssignmentUpdateRequest;
 import com.SwitchBoard.WorkspaceService.dto.response.TaskAssignmentResponse;
 import com.SwitchBoard.WorkspaceService.entity.*;
+import com.SwitchBoard.WorkspaceService.entity.enums.TaskStatus;
 import com.SwitchBoard.WorkspaceService.repository.TaskAssignmentRepository;
 import com.SwitchBoard.WorkspaceService.repository.TaskRepository;
 import com.SwitchBoard.WorkspaceService.service.TaskAssignmentService;
 import com.SwitchBoard.WorkspaceService.Exception.ResourceNotFoundException;
-import com.SwitchBoard.WorkspaceService.Exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,6 @@ public class TaskAssignmentServiceImpl implements TaskAssignmentService {
                         .assignedUserId(userId)
                         .assignedByUserId(request.getAssignedBy())
                         .status(TaskStatus.ONGOING)
-                        .spentHours(0.0)
                         .assignedAt(Instant.now())
                         .build())
                 .collect(Collectors.toList());
@@ -102,9 +101,6 @@ public class TaskAssignmentServiceImpl implements TaskAssignmentService {
             }
         }
 
-        if (request.getSpentHours() != null) {
-            assignment.setSpentHours(request.getSpentHours());
-        }
 
         if (request.getUserNotes() != null) {
             assignment.setUserNotes(request.getUserNotes());
@@ -208,7 +204,6 @@ public class TaskAssignmentServiceImpl implements TaskAssignmentService {
                 .assignedUserId(assignment.getAssignedUserId())
                 .assignedByUserId(assignment.getAssignedByUserId())
                 .status(assignment.getStatus())
-                .spentHours(assignment.getSpentHours())
                 .rewardPointsEarned(assignment.getRewardPointsEarned())
                 .startedAt(assignment.getStartedAt())
                 .completedAt(assignment.getCompletedAt())

@@ -1,7 +1,6 @@
 package com.SwitchBoard.WorkspaceService.repository;
 
 import com.SwitchBoard.WorkspaceService.entity.Assignment;
-import com.SwitchBoard.WorkspaceService.entity.AssignmentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

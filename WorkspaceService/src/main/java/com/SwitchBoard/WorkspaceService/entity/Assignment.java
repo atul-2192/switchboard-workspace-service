@@ -1,5 +1,6 @@
 package com.SwitchBoard.WorkspaceService.entity;
 
+import com.SwitchBoard.WorkspaceService.entity.enums.AssignmentType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
@@ -33,7 +34,8 @@ public class Assignment extends BaseEntity {
     private Instant deadline;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "assignmentId") // creates FK in task table
+    @JoinColumn(name = "assignmentId")
+    @Builder.Default
     private Set<Task> tasks = new HashSet<>();
 
     @Column(name = "workspaceId", insertable = false, updatable = false)
