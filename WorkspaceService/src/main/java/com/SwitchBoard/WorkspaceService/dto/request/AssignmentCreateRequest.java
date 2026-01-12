@@ -25,7 +25,7 @@ public class AssignmentCreateRequest {
     @Size(max = 5000, message = "Description must not exceed 5000 characters")
     private String description;
 
-    @NotNull(message = "Assignment type is required")
+
     private AssignmentType assignmentTypeKey;
 
     @Min(value = 0, message = "Total reward points must be non-negative")

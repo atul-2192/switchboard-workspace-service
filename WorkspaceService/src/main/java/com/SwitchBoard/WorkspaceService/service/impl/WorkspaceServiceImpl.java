@@ -3,7 +3,6 @@ package com.SwitchBoard.WorkspaceService.service.impl;
 import com.SwitchBoard.WorkspaceService.config.Constant;
 import com.SwitchBoard.WorkspaceService.dto.ApiResponse;
 import com.SwitchBoard.WorkspaceService.dto.response.WorkspaceResponse;
-import com.SwitchBoard.WorkspaceService.entity.Assignment;
 import com.SwitchBoard.WorkspaceService.entity.Workspace;
 import com.SwitchBoard.WorkspaceService.entity.WorkspaceAccess;
 import com.SwitchBoard.WorkspaceService.entity.enums.WorkspaceType;
@@ -50,7 +49,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<WorkspaceResponse> getWorkspacesByOwnerUserId(UUID ownerUserId) {
         log.info("WorkspaceServiceImpl :: getWorkspacesByOwnerUserId :: Started fetching workspaces for user :: {}", ownerUserId);
 
@@ -72,7 +71,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         
         return responses;
     }
-
 
     private List<Workspace> createDefaultWorkspaces(UUID ownerUserId) {
         log.debug("WorkspaceServiceImpl :: createDefaultWorkspaces :: Creating default workspaces for user :: {}", ownerUserId);
@@ -276,6 +274,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     }
 
     @Override
+    @Transactional
     public Workspace getRoadmapWorkspaceByUserId(UUID userId) {
         log.info("WorkspaceServiceImpl :: getRoadmapWorkspaceByUserId :: Fetching roadmap workspace for user :: {}", userId);
 
