@@ -35,7 +35,7 @@ jobs:
           file: Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/atul-2192/auth-service:prod
+          tags: ghcr.io/atul-2192/workspace-service:prod
 
       # 5 SSH into VPS and redeploy workspace-service
       - name: Deploy on Contabo VPS
