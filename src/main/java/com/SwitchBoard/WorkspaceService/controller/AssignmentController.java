@@ -179,12 +179,13 @@ public class AssignmentController {
             @Parameter(description = "Request containing list of task IDs to add", required = true)
             @Valid @RequestBody TaskCreateRequest taskCreateRequest,
             HttpServletRequest httpRequest) {
-        log.info("AssignmentController :: addTasksToAssignment :: Adding {} tasks to assignment :: {}", taskCreateRequest.getTasks().size(), id);
+        int taskCount = taskCreateRequest.getTasks() != null ? taskCreateRequest.getTasks().size() : 0;
+        log.info("AssignmentController :: addTasksToAssignment :: Adding {} tasks to assignment :: {}", taskCount, id);
 
         AssignmentResponse assignmentResponse = assignmentService.addTasksToAssignment(id , taskCreateRequest);
         ApiResponse response = ApiResponse.response("Tasks added to assignment successfully", assignmentResponse, httpRequest.getRequestURI());
 
-        log.info("AssignmentController :: addTasksToAssignment :: {} tasks added to assignment :: {}", taskCreateRequest.getTasks().size(), id);
+        log.info("AssignmentController :: addTasksToAssignment :: {} tasks added to assignment :: {}", taskCount, id);
         return ResponseEntity.ok(response);
     }
 
